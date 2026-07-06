@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter
 
-from app.models.health import HealthResponse
+from app.schemas.health import HealthResponse
 
 router = APIRouter(tags=["Health"])
 
