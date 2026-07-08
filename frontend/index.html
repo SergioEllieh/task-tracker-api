@@ -48,6 +48,16 @@
         box-shadow: 0 18px 45px -30px var(--shadow);
       }
 
+      .app-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+
+      .app-header > div:first-child {
+        flex: 1;
+      }
+
       .app-header h1 {
         margin: 0 0 0.35rem;
         font-size: clamp(1.6rem, 2.2vw, 2rem);
@@ -58,6 +68,23 @@
         margin: 0;
         color: var(--muted);
         line-height: 1.6;
+      }
+
+      .new-task-btn {
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        background: #3b82f6;
+        color: #ffffff;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        margin-top: 0.2rem;
+      }
+
+      .new-task-btn:hover {
+        background: #2563eb;
       }
 
       main {
@@ -147,6 +174,10 @@
         color: var(--muted);
         line-height: 1.5;
         font-size: 0.92rem;
+      }
+
+      .task-id {
+        display: none;
       }
 
       .task-meta {
@@ -271,6 +302,172 @@
         border-color: #3b82f6;
         background: #eff6ff;
       }
+
+      /* Modal styles */
+      .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+
+      .modal-overlay.open {
+        display: grid;
+        place-items: center;
+      }
+
+      .modal {
+        background: var(--panel);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.3);
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--border);
+        position: sticky;
+        top: 0;
+        background: var(--panel);
+      }
+
+      .modal-header h2 {
+        margin: 0;
+        font-size: 1.3rem;
+      }
+
+      .modal-close-btn {
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--muted);
+        padding: 0;
+        width: 2rem;
+        height: 2rem;
+        display: grid;
+        place-items: center;
+      }
+
+      .modal-close-btn:hover {
+        color: var(--text);
+      }
+
+      .modal-body {
+        padding: 1.5rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.2rem;
+      }
+
+      .form-group:last-child {
+        margin-bottom: 0;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.4rem;
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 0.95rem;
+        box-sizing: border-box;
+      }
+
+      .form-group textarea {
+        resize: vertical;
+        min-height: 80px;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .form-error {
+        color: #dc2626;
+        font-size: 0.85rem;
+        margin-top: 0.3rem;
+      }
+
+      .modal-errors {
+        background: var(--error);
+        border: 1px solid var(--error-border);
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 1.2rem;
+        color: #991b1b;
+        font-size: 0.9rem;
+      }
+
+      .modal-footer {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+        padding: 1.5rem;
+        border-top: 1px solid var(--border);
+        background: #f9fafb;
+        position: sticky;
+        bottom: 0;
+      }
+
+      .modal-btn {
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        padding: 0.5rem 1.2rem;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .modal-btn-cancel {
+        background: #f3f4f6;
+        color: var(--text);
+      }
+
+      .modal-btn-cancel:hover {
+        background: #e5e7eb;
+      }
+
+      .modal-btn-submit {
+        background: #3b82f6;
+        color: #ffffff;
+        border-color: #3b82f6;
+      }
+
+      .modal-btn-submit:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+      }
+
+      .modal-btn-submit:disabled {
+        background: #9ca3af;
+        border-color: #9ca3af;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
     </style>
   </head>
   <body>
@@ -279,10 +476,62 @@
         <h1>Task Tracker Kanban</h1>
         <p>Drag tasks between columns to update their status.</p>
       </div>
+      <button type="button" class="new-task-btn" onclick="openModal()">+ New Task</button>
     </header>
     <main>
       <section id="board" class="board" aria-live="polite"></section>
     </main>
+    <div id="modalOverlay" class="modal-overlay" onclick="handleOverlayClick(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2 id="modalTitle">New Task</h2>
+          <button type="button" class="modal-close-btn" onclick="closeModal()">&times;</button>
+        </div>
+        <form id="taskForm" onsubmit="submitTaskForm(event)">
+          <div class="modal-body">
+            <div id="modalErrors" class="modal-errors" style="display: none;"></div>
+            <input type="hidden" id="taskId" name="taskId" />
+            <div class="form-group">
+              <label for="taskTitle">Title *</label>
+              <input type="text" id="taskTitle" name="title" required />
+              <div id="titleError" class="form-error"></div>
+            </div>
+            <div class="form-group">
+              <label for="taskDescription">Description</label>
+              <textarea id="taskDescription" name="description"></textarea>
+              <div id="descriptionError" class="form-error"></div>
+            </div>
+            <div class="form-group">
+              <label for="taskStatus">Status</label>
+              <select id="taskStatus" name="status">
+                <option value="ToDo">ToDo</option>
+                <option value="InProgress">In Progress</option>
+                <option value="Done">Done</option>
+              </select>
+              <div id="statusError" class="form-error"></div>
+            </div>
+            <div class="form-group">
+              <label for="taskPriority">Priority</label>
+              <select id="taskPriority" name="priority">
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+              <div id="priorityError" class="form-error"></div>
+            </div>
+            <div class="form-group">
+              <label for="taskAssignee">Assignee</label>
+              <input type="text" id="taskAssignee" name="assignee" placeholder="Optional" />
+              <div id="assigneeError" class="form-error"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
+            <button type="submit" class="modal-btn modal-btn-submit">Save Task</button>
+          </div>
+        </form>
+      </div>
+    </div>
     <script>
       const API_BASE = window.location.origin && window.location.origin !== "null"
         ? window.location.origin
@@ -437,7 +686,7 @@
             <p>${escapeHtml(task.description || "No description")}</p>
             <div class="task-meta">
               <span class="priority-pill ${priorityClass}">${escapeHtml(priority)}</span>
-              <button type="button">Edit</button>
+              <button type="button" onclick="openModal(${JSON.stringify(task).replace(/"/g, '&quot;')})">Edit</button>
             </div>
           </div>
         `;
@@ -558,6 +807,162 @@
           .replace(/"/g, "&quot;")
           .replace(/'/g, "&#39;");
       }
+
+      /* Modal functions */
+      let currentModalMode = "create";
+
+      function openModal(task) {
+        const overlay = document.getElementById("modalOverlay");
+        const form = document.getElementById("taskForm");
+        const modalTitle = document.getElementById("modalTitle");
+
+        // Clear previous state
+        clearModalErrors();
+        form.reset();
+
+        if (task) {
+          // Edit mode
+          currentModalMode = "edit";
+          modalTitle.textContent = "Edit Task";
+          document.getElementById("taskId").value = task.id || "";
+          document.getElementById("taskTitle").value = task.title || "";
+          document.getElementById("taskDescription").value = task.description || "";
+          document.getElementById("taskStatus").value = task.status || "ToDo";
+          document.getElementById("taskPriority").value = task.priority || "Low";
+          document.getElementById("taskAssignee").value = task.assignee || "";
+        } else {
+          // Create mode
+          currentModalMode = "create";
+          modalTitle.textContent = "New Task";
+          document.getElementById("taskId").value = "";
+          document.getElementById("taskStatus").value = "ToDo";
+          document.getElementById("taskPriority").value = "Low";
+        }
+
+        overlay.classList.add("open");
+        document.getElementById("taskTitle").focus();
+      }
+
+      function closeModal() {
+        const overlay = document.getElementById("modalOverlay");
+        overlay.classList.remove("open");
+        clearModalErrors();
+        document.getElementById("taskForm").reset();
+      }
+
+      function handleOverlayClick(event) {
+        if (event.target.id === "modalOverlay") {
+          closeModal();
+        }
+      }
+
+      function clearModalErrors() {
+        document.getElementById("modalErrors").style.display = "none";
+        document.getElementById("modalErrors").textContent = "";
+        document.querySelectorAll(".form-error").forEach((el) => {
+          el.textContent = "";
+        });
+      }
+
+      async function submitTaskForm(event) {
+        event.preventDefault();
+        clearModalErrors();
+
+        const title = document.getElementById("taskTitle").value.trim();
+        const description = document.getElementById("taskDescription").value;
+        const status = document.getElementById("taskStatus").value;
+        const priority = document.getElementById("taskPriority").value;
+        const assignee = document.getElementById("taskAssignee").value.trim();
+        const taskId = document.getElementById("taskId").value;
+
+        // Client-side validation
+        if (!title) {
+          document.getElementById("titleError").textContent = "Title is required";
+          document.getElementById("taskTitle").focus();
+          return;
+        }
+
+        const url = currentModalMode === "edit"
+          ? `${API_BASE}/tasks/${taskId}`
+          : `${API_BASE}/tasks`;
+
+        const method = currentModalMode === "edit" ? "PATCH" : "POST";
+        const payload = {
+          title,
+          description: description || "",
+          status,
+          priority,
+          assignee: assignee || null
+        };
+
+        try {
+          const response = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+
+          if (response.ok) {
+            // Success: close modal and refresh board
+            closeModal();
+            fetchTasks();
+            return;
+          }
+
+          if (response.status === 422) {
+            // Validation error from server
+            const data = await response.json().catch(() => ({}));
+
+            if (data.detail) {
+              // If detail is an array of validation errors
+              if (Array.isArray(data.detail)) {
+                data.detail.forEach((error) => {
+                  const fieldName = error.loc?.[1];
+                  const message = error.msg || "Invalid value";
+                  if (fieldName && document.getElementById(`${fieldName}Error`)) {
+                    document.getElementById(`${fieldName}Error`).textContent = message;
+                  } else {
+                    showModalError(message);
+                  }
+                });
+              } else {
+                showModalError(data.detail);
+              }
+            } else if (data.message) {
+              showModalError(data.message);
+            } else if (data.error) {
+              showModalError(data.error);
+            } else {
+              showModalError("Validation failed. Please check your input.");
+            }
+            return;
+          }
+
+          // Other error responses
+          const data = await response.json().catch(() => ({}));
+          const message = data?.message || data?.error || `Request failed with status ${response.status}`;
+          showModalError(message);
+        } catch (error) {
+          console.error(error);
+          showModalError("Network error. Please check your connection and try again.");
+        }
+      }
+
+      function showModalError(message) {
+        const errorContainer = document.getElementById("modalErrors");
+        errorContainer.textContent = message;
+        errorContainer.style.display = "block";
+      }
+
+      // Handle Escape key to close modal
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          const overlay = document.getElementById("modalOverlay");
+          if (overlay.classList.contains("open")) {
+            closeModal();
+          }
+        }
+      });
 
       document.addEventListener("DOMContentLoaded", fetchTasks);
     </script>
