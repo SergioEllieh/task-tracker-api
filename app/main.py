@@ -6,7 +6,7 @@ from app import storage
 from app.api.routes.health import router as health_router
 from app.business_rules import validate_status_transition
 from app.core.config import get_settings
-from app.models import TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
+from app.models import CommentCreate, CommentResponse, TaskCreate, TaskPriority, TaskResponse, TaskStatus, TaskUpdate
 
 settings = get_settings()
 
@@ -42,8 +42,12 @@ def create_task(payload: TaskCreate) -> TaskResponse:
 def list_tasks(
     status: TaskStatus | None = None,
     priority: TaskPriority | None = None,
+    overdue: bool | None = None,
 ) -> list[TaskResponse]:
-    return storage.get_all_tasks(status=status, priority=priority)
+    tasks = storage.get_all_tasks(status=status, priority=priority)
+    if overdue is not None:
+        tasks = [task for task in tasks if task.overdue is overdue]
+    return tasks
 
 
 @app.get("/tasks/{task_id}", response_model=TaskResponse, tags=["tasks"])
@@ -89,6 +93,49 @@ def delete_task(task_id: str) -> None:
         raise HTTPException(
             status_code=404,
             detail=f"Task with id {task_id} not found",
+        )
+
+
+@app.get("/tasks/{task_id}/comments", response_model=list[CommentResponse], tags=["tasks"])
+def list_comments(task_id: str) -> list[CommentResponse]:
+    comments = storage.get_comments_for_task(task_id)
+
+    if comments is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task with id {task_id} not found",
+        )
+
+    return comments
+
+
+@app.post("/tasks/{task_id}/comments", response_model=CommentResponse, status_code=status.HTTP_201_CREATED, tags=["tasks"])
+def add_comment(task_id: str, payload: CommentCreate) -> CommentResponse:
+    comment = storage.add_comment(task_id, payload)
+
+    if comment is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task with id {task_id} not found",
+        )
+
+    return comment
+
+
+@app.delete("/tasks/{task_id}/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["tasks"])
+def delete_comment(task_id: str, comment_id: str) -> None:
+    deleted = storage.delete_comment(task_id, comment_id)
+
+    if deleted is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Task with id {task_id} not found",
+        )
+
+    if not deleted:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Comment with id {comment_id} not found for task {task_id}",
         )
 
 
