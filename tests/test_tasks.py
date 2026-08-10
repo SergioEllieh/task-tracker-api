@@ -46,7 +46,7 @@ def test_create_task_unknown_field_returns_422(client):
 
 def test_list_tasks_empty_returns_200_and_empty_list(client):
     response = client.get("/tasks")
-    assert response.status_code == 201
+    assert response.status_code == 200
     assert response.json() == []
 
 

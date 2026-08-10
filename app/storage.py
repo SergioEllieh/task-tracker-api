@@ -36,6 +36,16 @@ def _to_response(task_data: dict[str, Any], current_date: Optional[date] = None)
 
 
 def add_task(payload: TaskCreate) -> TaskResponse:
+    """Create and store a new task.
+
+    Args:
+        payload: Validated task creation data.
+
+    Returns:
+        The stored task, with a generated `id`, `created_at`/`updated_at`
+        set to the current UTC time, and `overdue` computed against that
+        same timestamp.
+    """
     now = datetime.now(timezone.utc)
     task_id = str(uuid4())
     task_data = {
@@ -54,6 +64,16 @@ def add_task(payload: TaskCreate) -> TaskResponse:
 
 
 def get_all_tasks(status=None, priority=None) -> list[TaskResponse]:
+    """Return all stored tasks, optionally filtered.
+
+    Args:
+        status: If provided, only tasks with this status are returned.
+        priority: If provided, only tasks with this priority are returned.
+
+    Returns:
+        The matching tasks, each with `overdue` computed against the
+        current UTC date.
+    """
     tasks = [_to_response(task_data) for task_data in _tasks.values()]
     if status is not None:
         tasks = [t for t in tasks if t.status == status]
@@ -63,6 +83,14 @@ def get_all_tasks(status=None, priority=None) -> list[TaskResponse]:
 
 
 def get_task_by_id(task_id: str) -> Optional[TaskResponse]:
+    """Look up a single task by id.
+
+    Args:
+        task_id: The unique identifier of the task.
+
+    Returns:
+        The matching task, or None if no task with `task_id` exists.
+    """
     task_data = _tasks.get(task_id)
     if task_data is None:
         return None
@@ -70,6 +98,20 @@ def get_task_by_id(task_id: str) -> Optional[TaskResponse]:
 
 
 def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
+    """Apply a partial update to a stored task.
+
+    Only fields set on `payload` (per `model_dump(exclude_unset=True)`)
+    are changed. [VERIFY] if `payload` has no set fields, this returns the
+    task unchanged and does NOT refresh `updated_at` — confirm this is
+    intentional.
+
+    Args:
+        task_id: The unique identifier of the task to update.
+        payload: The fields to update.
+
+    Returns:
+        The updated task, or None if no task with `task_id` exists.
+    """
     task_data = _tasks.get(task_id)
     if task_data is None:
         return None
@@ -82,6 +124,15 @@ def update_task(task_id: str, payload: TaskUpdate) -> Optional[TaskResponse]:
 
 
 def delete_task(task_id: str) -> bool:
+    """Delete a stored task by id.
+
+    Args:
+        task_id: The unique identifier of the task to delete.
+
+    Returns:
+        True if the task was deleted, False if no task with `task_id`
+        existed.
+    """
     if task_id in _tasks:
         del _tasks[task_id]
         return True
@@ -89,6 +140,16 @@ def delete_task(task_id: str) -> bool:
 
 
 def add_comment(task_id: str, payload: CommentCreate) -> Optional[CommentResponse]:
+    """Create and store a comment on a task.
+
+    Args:
+        task_id: The unique identifier of the parent task.
+        payload: The comment data (`text`).
+
+    Returns:
+        The newly created comment, or None if no task with `task_id`
+        exists.
+    """
     if task_id not in _tasks:
         return None
     comment_data = {
@@ -102,12 +163,32 @@ def add_comment(task_id: str, payload: CommentCreate) -> Optional[CommentRespons
 
 
 def get_comments_for_task(task_id: str) -> Optional[list[CommentResponse]]:
+    """Return all comments stored for a task.
+
+    Args:
+        task_id: The unique identifier of the parent task.
+
+    Returns:
+        The comments for the task (empty list if none), or None if no
+        task with `task_id` exists.
+    """
     if task_id not in _tasks:
         return None
     return [CommentResponse(**comment_data) for comment_data in _comments.get(task_id, [])]
 
 
 def delete_comment(task_id: str, comment_id: str) -> bool | None:
+    """Delete a single comment from a task.
+
+    Args:
+        task_id: The unique identifier of the parent task.
+        comment_id: The unique identifier of the comment to delete.
+
+    Returns:
+        True if the comment was deleted, False if the task exists but no
+        comment with `comment_id` was found, or None if no task with
+        `task_id` exists.
+    """
     if task_id not in _tasks:
         return None
     task_comments = _comments.get(task_id)

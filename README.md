@@ -1,157 +1,131 @@
 # Task Tracker API
 
-A REST API and simple frontend for managing tasks, built with **Python**, **FastAPI**, **Pydantic**, and a lightweight web interface.
+## 1. Project Overview
 
-The project was developed throughout the AI-Assisted Coding course and extended during the Mid-Course Project.
+Task Tracker API is a FastAPI REST backend with a lightweight static HTML/JS frontend, built during the AI-Assisted Coding course and extended for the Mid-Course Project (due dates + overdue filter, search + combined filters, task comments).
 
-## Mid-Course Features
+* **Backend**: FastAPI + Pydantic v2, in-memory storage (no database)
+* **Frontend**: a single static file (`frontend/index.html`) that calls the API directly with `fetch()` — no build step, no framework
+* **Tests**: pytest + FastAPI `TestClient`
 
-The two selected features for the Mid-Course Project are:
+This project does not implement authentication, a persistent database, or deployment/production configuration — see [Section 9](#9-project-conventions-and-current-limitations).
 
-1. **Due Dates + Overdue Filter**
+## 2. Prerequisites
 
-   * Tasks can have an optional due date.
-   * Due dates can be added and updated.
-   * Overdue tasks can be identified and filtered.
-   * Due dates are displayed in the frontend.
+* Python 3.11+ `[VERIFY]` — Dockerfile and CI pin Python 3.11 exactly, but the project's local `venv` has been observed reporting 3.13.1; confirm which version the course actually targets.
+* `pip` (bundled with Python)
+* Docker Desktop — only needed if you plan to run the container (see [Section 6](#6-run-with-docker))
 
-2. **Search + Combined Filters**
+## 3. Local Setup
 
-   * Tasks can be searched using text.
-   * Search can be combined with available task filters.
-   * Filters can be used to narrow the displayed tasks.
-
-## Tech Stack
-
-* Python 3.11+
-* FastAPI
-* Uvicorn
-* Pydantic
-* Pytest
-* HTML
-* CSS
-* JavaScript
-
-## Run the Backend
-
-Open a terminal in the project root.
-
-### 1. Create a virtual environment
-
-```bash
-python -m venv venv
-```
-
-### 2. Activate the virtual environment
-
-On Windows PowerShell:
+Run these from the repository root.
 
 ```powershell
+python -m venv venv
 venv\Scripts\Activate.ps1
-```
-
-On Windows Command Prompt:
-
-```cmd
-venv\Scripts\activate
-```
-
-### 3. Install the dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 4. Start the FastAPI backend
+`pytest` and `httpx` (required to run the test suite) are **not** pinned in `requirements.txt` `[VERIFY]`. Install them explicitly if you plan to run tests:
 
-```bash
-uvicorn app.main:app --reload
+```powershell
+pip install pytest httpx
 ```
 
-The backend will normally be available at:
+Copy the example environment file if you want to override the defaults (`APP_ENV=development`, `PORT=8000`):
 
-```text
-http://127.0.0.1:8000
+```powershell
+Copy-Item .env.example .env
 ```
 
-FastAPI API documentation is available at:
+## 4. Run the App Locally
 
-```text
-http://127.0.0.1:8000/docs
+```powershell
+uvicorn app.main:app --reload --port 8000
 ```
 
-## Open the Frontend
+* App/API: http://127.0.0.1:8000
+* Interactive docs: http://127.0.0.1:8000/docs
+* Frontend (served by the API via `StaticFiles`): http://127.0.0.1:8000/frontend/index.html — you can also open `frontend/index.html` directly in a browser (the API's CORS config explicitly allows the `null` origin this produces)
 
-First, make sure the backend is running.
+The frontend's `API_BASE_URL` is hardcoded to `http://127.0.0.1:8000`, so the backend must run on that exact host/port for the frontend to work.
 
-Then open the frontend file located at:
+## 5. Run Tests
 
-```text
-frontend/index.html
-```
-
-You can open `index.html` directly in your browser.
-
-If your project serves the frontend through FastAPI, use the frontend URL configured by the application instead.
-
-## Run the Tests
-
-Make sure the virtual environment is activated and the dependencies are installed.
-
-From the project root, run:
-
-```bash
-pytest
-```
-
-For more detailed test output:
-
-```bash
+```powershell
 pytest -v
 ```
 
-All existing tests and Mid-Course Project feature tests should pass before submission.
+Known pre-existing failure: `tests/test_tasks.py::test_patch_same_status_returns_422` (actual 200, expected 422). This is not caused by unrelated changes — don't "fix" it incidentally while working on something else.
 
-## Mid-Course Documentation
+`tests/verify_a.py` is a standalone manual verification script for `app/models.py` (not picked up by pytest's default `test_*` discovery); run it directly if needed:
 
-The required Mid-Course Project documentation is located in:
+```powershell
+python tests/verify_a.py
+```
+
+## 6. Run with Docker
+
+```powershell
+docker build -t task-tracker-api .
+docker run -p 8000:8000 task-tracker-api
+```
+
+Then visit http://127.0.0.1:8000/docs.
+
+Notes:
+
+* The image is a multi-stage build (`python:3.11-slim`) that installs dependencies as a non-root `app` user and copies only `app/` and `frontend/` into the runtime stage.
+* `.env` is **not** copied into the image; the container runs with the defaults baked into `app/core/config.py` (`APP_ENV=development`, `PORT=8000`) unless you pass `-e` flags.
+* `[VERIFY]` The container's `CMD` hardcodes `--port 8000`; passing `-e PORT=...` will not change the port the server actually listens on inside the container — you'd still need to map the container's fixed port 8000 to a host port with `-p <host_port>:8000`.
+
+## 7. CI Workflow Summary
+
+Defined in [.github/workflows/ci.yml](.github/workflows/ci.yml), the `CI` workflow runs on every `push` and `pull_request`:
+
+1. Checks out the repository (`actions/checkout@v4`)
+2. Sets up Python 3.11 (`actions/setup-python@v5`)
+3. Upgrades `pip`
+4. Installs dependencies with `pip install -r requirements.txt`
+5. Runs `pytest -v`
+
+`[VERIFY]` Since `pytest`/`httpx` aren't in `requirements.txt` (see [Section 3](#3-local-setup)), it's unconfirmed how the final `pytest -v` step succeeds in this workflow as written.
+
+## 8. Project Structure
 
 ```text
-docs/midcourse/
+app/
+  main.py            FastAPI app, CORS, task/comment routes, mounts frontend/ as static files
+  business_rules.py  validate_status_transition() — task status transition rules
+  models.py          Pydantic models (TaskCreate, TaskUpdate, TaskResponse, TaskStatus, TaskPriority, CommentCreate, CommentResponse)
+  storage.py         In-memory persistence; reset via storage._reset()
+  core/config.py     Settings/get_settings() — reads APP_ENV/PORT from environment/.env
+  api/routes/health.py  Health check router
+  schemas/health.py  HealthResponse model used by the health route
+  models/, storage/  Empty scaffold directories (.gitkeep only) `[VERIFY]` unused by current code
+frontend/
+  index.html         Single-file HTML/CSS/JS Kanban board; calls the API via fetch()
+tests/
+  conftest.py        TestClient + storage._reset() autouse fixture
+  test_tasks.py      Task/status-transition tests
+  test_frontend.py   Frontend-serving tests
+  verify_a.py        Standalone manual verification script (not pytest-discovered)
+docs/Mid-Course-Project/
+  mini-adr.md, prompt-log.md, reflections.md, user-stories.md, verification.md
+Dockerfile           Multi-stage build, non-root user, exposes 8000
+requirements.txt     Pinned runtime dependencies
 ```
 
-The folder contains:
+## 9. Project Conventions and Current Limitations
 
-* `user-stories.md`
-* `mini-adr.md`
-* `prompt-log.md`
-* `verification.md`
-* `reflection.md`
+* **Storage is in-memory only** — all tasks/comments are lost on restart; `storage._reset()` is used as an autouse fixture in tests.
+* **Status transitions** (`app/business_rules.py`, `VALID_TRANSITIONS`): only `ToDo → InProgress`, `InProgress → Done`, and `Done → InProgress` are valid. Any other transition (e.g. `ToDo → Done`, or re-setting the same status) raises HTTP 422.
+* **Validation rules**: task `title` must be non-blank after stripping (max 200 characters); comment `text` must be non-blank after stripping.
+* **Overdue tasks**: a task is `overdue` when `due_date` is set and earlier than the current UTC date.
+* **CORS**: allowed origins are `http://localhost:5500`, `http://127.0.0.1:5500`, `http://localhost:5173`, and `null` (for `file://` access); all methods/headers are allowed, credentials are not.
+* **No authentication, no database, no deployment configuration** are implemented, and none should be added without explicit confirmation.
+* **No major UI redesigns** (new pages, framework adoption) to `frontend/index.html` without explicit confirmation.
 
-## Development Branch
+## 10. Technical Decisions
 
-The Mid-Course Project submission branch is:
-
-```text
-mid-course-project
-```
-
-## Final Verification
-
-Before submitting the project, run:
-
-```bash
-pytest -v
-```
-
-Confirm that there are **zero failing tests**.
-
-Also verify manually that:
-
-* Tasks can be created and edited.
-* Due dates can be added and updated.
-* Overdue tasks are detected correctly.
-* The overdue filter works.
-* Search works correctly.
-* Search can be combined with the available filters.
-* The frontend loads and remains usable.
+See [docs/Mid-Course-Project/mini-adr.md](docs/Mid-Course-Project/mini-adr.md) for the mini-ADR covering the due dates/overdue filter and task comments features (context, decisions, alternatives considered, and consequences). Related docs: [user-stories.md](docs/Mid-Course-Project/user-stories.md), [prompt-log.md](docs/Mid-Course-Project/prompt-log.md), [verification.md](docs/Mid-Course-Project/verification.md), [reflections.md](docs/Mid-Course-Project/reflections.md).

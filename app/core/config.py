@@ -14,4 +14,12 @@ class Settings:
 
 @lru_cache
 def get_settings() -> Settings:
+    """Return the cached application settings instance.
+
+    Returns:
+        The process-wide `Settings` instance, constructed once and cached
+        via `lru_cache`. [VERIFY] because of caching, changes to
+        environment variables after the first call won't be reflected
+        within the same process.
+    """
     return Settings()
