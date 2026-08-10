@@ -16,7 +16,7 @@ RUN useradd --create-home --shell /bin/bash app
 
 WORKDIR /app
 
-# Bring in the packages installed in the builder stage
+# Bring in packages installed in the builder stage
 COPY --from=builder --chown=app:app /root/.local /home/app/.local
 
 # Copy only what the runtime needs

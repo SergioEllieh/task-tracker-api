@@ -56,8 +56,6 @@ The frontend's `API_BASE_URL` is hardcoded to `http://127.0.0.1:8000`, so the ba
 pytest -v
 ```
 
-Known pre-existing failure: `tests/test_tasks.py::test_patch_same_status_returns_422` (actual 200, expected 422). This is not caused by unrelated changes — don't "fix" it incidentally while working on something else.
-
 `tests/verify_a.py` is a standalone manual verification script for `app/models.py` (not picked up by pytest's default `test_*` discovery); run it directly if needed:
 
 ```powershell
@@ -129,3 +127,73 @@ requirements.txt     Pinned runtime dependencies
 ## 10. Technical Decisions
 
 See [docs/Mid-Course-Project/mini-adr.md](docs/Mid-Course-Project/mini-adr.md) for the mini-ADR covering the due dates/overdue filter and task comments features (context, decisions, alternatives considered, and consequences). Related docs: [user-stories.md](docs/Mid-Course-Project/user-stories.md), [prompt-log.md](docs/Mid-Course-Project/prompt-log.md), [verification.md](docs/Mid-Course-Project/verification.md), [reflections.md](docs/Mid-Course-Project/reflections.md).
+
+## 11. Final Project
+
+**Branch reviewed:** `final-project`
+
+### What This Submission Demonstrates
+
+- The existing Task Tracker app still runs inside the intended course scope.
+- The API starts successfully and the `/health` endpoint responds correctly.
+- The Kanban board and create/edit task flow are still visible and working.
+- The full pytest suite passes.
+- Release-readiness evidence is documented in the `docs/` directory.
+
+### How to Run Locally
+
+From the repository root:
+
+```powershell
+python -m venv venv
+venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+Health check:
+
+```powershell
+curl.exe http://127.0.0.1:8000/health
+```
+
+Verified baseline result:
+
+```json
+{"status":"ok","timestamp":"2026-08-10T14:31:43.930345+00:00"}
+```
+
+### How to Run Tests
+
+```powershell
+pytest
+```
+
+Verified baseline result:
+
+```text
+36 passed in 0.42s
+```
+
+### How to Run with Docker
+
+```powershell
+docker build -t task-tracker-api .
+docker run -p 8000:8000 task-tracker-api
+```
+
+Docker runtime verification is documented separately in `docs/release-evidence.md`.
+
+### Evidence Files
+
+- `docs/release-evidence.md`
+- `docs/final-ai-review.md`
+- `docs/ai-playbook.md`
+
+### AI Assistance Summary
+
+AI was used to assist with release documentation, CI/Docker review, code review, and security review.
+
+AI-generated suggestions are reviewed before being accepted. Final verification includes running the test suite, checking `/health`, reviewing repository changes, Docker verification, and manual checks.
+
+Incorrect, unnecessary, or out-of-scope AI suggestions are rejected or corrected and recorded in `docs/final-ai-review.md`.

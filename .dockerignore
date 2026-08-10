@@ -1,5 +1,6 @@
 # Environment variables / secrets
 .env
+.env.*
 
 # Version control
 .git
@@ -24,7 +25,7 @@ dist/
 .coverage
 htmlcov/
 
-# Node (if present)
+# Node
 node_modules/
 
 # OS / editor files
