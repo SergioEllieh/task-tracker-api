@@ -52,12 +52,16 @@ class TaskUpdate(BaseModel):
     @classmethod
     def validate_title(cls, v: Optional[str]) -> Optional[str]:
         if v is None:
-            return v
+            raise ValueError("title cannot be null")
+
         v = v.strip()
+
         if not v:
             raise ValueError("title cannot be blank")
+
         if len(v) > 200:
             raise ValueError("title must be at most 200 characters")
+
         return v
 
 

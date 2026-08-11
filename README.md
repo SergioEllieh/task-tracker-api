@@ -15,11 +15,13 @@ The two selected features for the Mid-Course Project are:
    * Overdue tasks can be identified and filtered.
    * Due dates are displayed in the frontend.
 
-2. **Search + Combined Filters**
+2. **Task Comments**
 
-   * Tasks can be searched using text.
-   * Search can be combined with available task filters.
-   * Filters can be used to narrow the displayed tasks.
+   * Comments can be added to tasks.
+   * Blank or whitespace-only comments are rejected.
+   * Comments can be listed for an individual task.
+   * Comments can be deleted.
+   * Missing tasks and comments return appropriate 404 responses.
 
 ## Tech Stack
 
@@ -152,6 +154,7 @@ Also verify manually that:
 * Due dates can be added and updated.
 * Overdue tasks are detected correctly.
 * The overdue filter works.
-* Search works correctly.
-* Search can be combined with the available filters.
+* Comments can be added to tasks.
+* Blank comments are rejected.
+* Comments can be listed and deleted.
 * The frontend loads and remains usable.

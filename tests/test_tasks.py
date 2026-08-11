@@ -412,3 +412,21 @@ def test_delete_missing_comment_for_existing_task_returns_404(client, created_ta
     response = client.delete(f"/tasks/{created_task['id']}/comments/{comment_id}")
 
     assert response.status_code == 404
+
+
+def test_patch_null_title_returns_422_and_does_not_corrupt_task(client, created_task):
+    response = client.patch(
+        f"/tasks/{created_task['id']}",
+        json={"title": None},
+    )
+
+    assert response.status_code == 422
+
+    # Verify the application still works after the rejected update
+    list_response = client.get("/tasks")
+    assert list_response.status_code == 200
+
+    tasks = list_response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["id"] == created_task["id"]
+    assert tasks[0]["title"] == created_task["title"]
