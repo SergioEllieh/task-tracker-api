@@ -2,7 +2,7 @@
 
 ## 1. Project Overview
 
-Task Tracker API is a FastAPI REST backend with a lightweight static HTML/JS frontend, built during the AI-Assisted Coding course and extended for the Mid-Course Project (due dates + overdue filter, search + combined filters, task comments).
+Task Tracker API is a FastAPI REST backend with a lightweight static HTML/JS frontend, built during the AI-Assisted Coding course and extended for the Mid-Course Project (due dates + overdue filter, combined filters, task comments).
 
 * **Backend**: FastAPI + Pydantic v2, in-memory storage (no database)
 * **Frontend**: a single static file (`frontend/index.html`) that calls the API directly with `fetch()` — no build step, no framework
@@ -138,7 +138,9 @@ See [docs/Mid-Course-Project/mini-adr.md](docs/Mid-Course-Project/mini-adr.md) f
 - The API starts successfully and the `/health` endpoint responds correctly.
 - The Kanban board and create/edit task flow are still visible and working.
 - The full pytest suite passes.
-- Release-readiness evidence is documented in the `docs/` directory.
+- CI runs the pytest suite on push and pull request (see [.github/workflows/ci.yml](.github/workflows/ci.yml)).
+- The Docker image builds and runs, with `/health` returning HTTP 200.
+- AI review, security, and ownership evidence is documented in the `docs/` directory.
 
 ### How to Run Locally
 
@@ -192,8 +194,8 @@ Docker runtime verification is documented separately in `docs/release-evidence.m
 
 ### AI Assistance Summary
 
-AI was used to assist with release documentation, CI/Docker review, code review, and security review.
+AI helped draft or review: release documentation, CI/Docker configuration, code review, and security review.
 
-AI-generated suggestions are reviewed before being accepted. Final verification includes running the test suite, checking `/health`, reviewing repository changes, Docker verification, and manual checks.
+I verified the work by: running the full test suite, checking `/health`, reviewing repository diffs, verifying the Docker build/run, and a manual scan for secrets/credentials.
 
-Incorrect, unnecessary, or out-of-scope AI suggestions are rejected or corrected and recorded in `docs/final-ai-review.md`.
+One AI suggestion I rejected or corrected: the Dockerfile review initially produced escaped colons (`--chown=app\:app`, `app.main\:app`); I corrected these to `app:app` and `app.main:app` before accepting the file. Full details in [docs/final-ai-review.md](docs/final-ai-review.md).

@@ -4,7 +4,7 @@ Guidance for Claude Code (and other AI agents) working in this repository.
 
 ## Project Overview
 
-Task Tracker API — a FastAPI REST backend with a lightweight static HTML/JS frontend, built during the AI-Assisted Coding course and extended for the Mid-Course Project (due dates/overdue filter, search + combined filters).
+Task Tracker API — a FastAPI REST backend with a lightweight static HTML/JS frontend, built during the AI-Assisted Coding course and extended for the Mid-Course Project (due dates/overdue filter, combined filters).
 
 - Backend entrypoint: `app/main.py`
 - Domain logic: `app/business_rules.py`, `app/models.py`
