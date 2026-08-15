@@ -2,7 +2,7 @@ from datetime import date, datetime, timezone
 from typing import Any, Optional
 from uuid import uuid4
 
-from app.models import CommentCreate, CommentResponse, TaskCreate, TaskResponse, TaskUpdate
+from app.models import CommentCreate, CommentResponse, TaskCreate, TaskResponse, TaskStatus, TaskUpdate
 
 _tasks: dict[str, dict[str, Any]] = {}
 _comments: dict[str, list[dict[str, Any]]] = {}
@@ -12,8 +12,9 @@ def _get_current_utc_date() -> date:
     return datetime.now(timezone.utc).date()
 
 
-def _is_overdue(due_date: Optional[date], current_date: Optional[date] = None) -> bool:
-    if due_date is None:
+def _is_overdue(due_date: Optional[date], status: TaskStatus, current_date: Optional[date] = None) -> bool:
+    # Completed tasks are never overdue, regardless of due date.
+    if due_date is None or status == TaskStatus.DONE:
         return False
     if current_date is None:
         current_date = _get_current_utc_date()
@@ -29,7 +30,7 @@ def _to_response(task_data: dict[str, Any], current_date: Optional[date] = None)
         priority=task_data["priority"],
         assignee=task_data["assignee"],
         due_date=task_data["due_date"],
-        overdue=_is_overdue(task_data["due_date"], current_date),
+        overdue=_is_overdue(task_data["due_date"], task_data["status"], current_date),
         created_at=task_data["created_at"],
         updated_at=task_data["updated_at"],
     )

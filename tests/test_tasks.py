@@ -414,6 +414,56 @@ def test_delete_missing_comment_for_existing_task_returns_404(client, created_ta
     assert response.status_code == 404
 
 
+def test_task_moved_to_done_is_no_longer_overdue(client):
+    today = datetime.now(timezone.utc).date()
+    past = (today - timedelta(days=1)).isoformat()
+
+    create = client.post("/tasks", json={"title": "late task", "due_date": past})
+    assert create.status_code == 201
+    task = create.json()
+    assert task["overdue"] is True
+
+    in_progress = client.patch(f"/tasks/{task['id']}", json={"status": "InProgress"})
+    assert in_progress.status_code == 200
+    assert in_progress.json()["overdue"] is True
+
+    done = client.patch(f"/tasks/{task['id']}", json={"status": "Done"})
+    assert done.status_code == 200
+    assert done.json()["overdue"] is False
+
+
+def test_done_task_with_past_due_date_excluded_from_overdue_filter(client):
+    today = datetime.now(timezone.utc).date()
+    past = (today - timedelta(days=1)).isoformat()
+
+    create = client.post("/tasks", json={"title": "finished late", "due_date": past, "status": "Done"})
+    assert create.status_code == 201
+    task = create.json()
+    assert task["overdue"] is False
+
+    overdue_true = client.get("/tasks", params={"overdue": "true"})
+    assert overdue_true.status_code == 200
+    assert all(t["id"] != task["id"] for t in overdue_true.json())
+
+    overdue_false = client.get("/tasks", params={"overdue": "false"})
+    assert overdue_false.status_code == 200
+    assert any(t["id"] == task["id"] for t in overdue_false.json())
+
+
+def test_reopened_task_with_past_due_date_is_overdue_again(client):
+    today = datetime.now(timezone.utc).date()
+    past = (today - timedelta(days=1)).isoformat()
+
+    create = client.post("/tasks", json={"title": "reopened", "due_date": past, "status": "Done"})
+    assert create.status_code == 201
+    task = create.json()
+    assert task["overdue"] is False
+
+    reopened = client.patch(f"/tasks/{task['id']}", json={"status": "InProgress"})
+    assert reopened.status_code == 200
+    assert reopened.json()["overdue"] is True
+
+
 def test_patch_null_title_returns_422_and_does_not_corrupt_task(client, created_task):
     response = client.patch(
         f"/tasks/{created_task['id']}",
