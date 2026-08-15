@@ -3,12 +3,9 @@ from fastapi import HTTPException, status
 from app.models import TaskStatus
 
 VALID_TRANSITIONS: frozenset[tuple[TaskStatus, TaskStatus]] = frozenset({
-    (TaskStatus.TODO, TaskStatus.IN_PROGRESS),
-    (TaskStatus.IN_PROGRESS, TaskStatus.DONE),
+    (TaskStatus.TODO, TaskStatus.IN_PROGRESS), 
+    (TaskStatus.IN_PROGRESS, TaskStatus.DONE), 
     (TaskStatus.DONE, TaskStatus.IN_PROGRESS),
-    (TaskStatus.TODO, TaskStatus.TODO),
-    (TaskStatus.IN_PROGRESS, TaskStatus.IN_PROGRESS),
-    (TaskStatus.DONE, TaskStatus.DONE),
 })
 
 
