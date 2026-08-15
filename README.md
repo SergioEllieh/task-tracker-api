@@ -44,7 +44,15 @@ Open a terminal in the project root.
 python -m venv venv
 ```
 
+Use `python3` instead of `python` if your system requires it.
+
 ### 2. Activate the virtual environment
+
+On macOS / Linux:
+
+```bash
+source venv/bin/activate
+```
 
 On Windows PowerShell:
 

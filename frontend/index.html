@@ -650,7 +650,8 @@
           }
 
           const data = await response.json().catch(() => null);
-          const message = data?.message || data?.error || `Request failed with status ${response.status}`;
+          const detail = typeof data?.detail === "string" ? data.detail : null;
+          const message = detail || data?.message || data?.error || `Request failed with status ${response.status}`;
           revertTaskStatus(id, previousStatus);
           boardErrorMessage = message;
           render();
@@ -680,6 +681,7 @@
 
       /* Modal functions */
       let currentModalMode = "create";
+      let originalTaskStatus = null;
       let commentsTaskId = null;
       let commentsLoadToken = 0;
 
@@ -930,12 +932,14 @@
           document.getElementById("taskPriority").value = task.priority || "Low";
           document.getElementById("taskAssignee").value = task.assignee || "";
           document.getElementById("taskDueDate").value = task.due_date || "";
+          originalTaskStatus = task.status || "ToDo";
           commentsTaskId = task.id;
           commentsElements.section.style.display = "block";
           loadComments(task.id);
         } else {
           // Create mode
           currentModalMode = "create";
+          originalTaskStatus = null;
           modalTitle.textContent = "New Task";
           document.getElementById("taskId").value = "";
           document.getElementById("taskStatus").value = "ToDo";
@@ -999,10 +1003,15 @@
         const payload = {
           title,
           description: description || "",
-          status,
           priority,
           assignee: assignee || null
         };
+
+        // The backend rejects same-status "transitions", so only send the
+        // status on edit when the user actually changed it.
+        if (currentModalMode !== "edit" || status !== originalTaskStatus) {
+          payload.status = status;
+        }
 
         if (currentModalMode === "edit") {
           payload.due_date = dueDate || null;
