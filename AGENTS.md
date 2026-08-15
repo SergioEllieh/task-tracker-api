@@ -17,6 +17,7 @@ Start the API:
 
 ```powershell
 uvicorn app.main:app --reload
+```
 
 Health check:
 

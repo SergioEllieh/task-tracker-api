@@ -12,7 +12,7 @@ This project does not implement authentication, a persistent database, or deploy
 
 ## 2. Prerequisites
 
-* Python 3.11+ `[VERIFY]` — Dockerfile and CI pin Python 3.11 exactly, but the project's local `venv` has been observed reporting 3.13.1; confirm which version the course actually targets.
+* Python 3.11 — this is the version pinned in CI and the Dockerfile and the verified baseline; newer 3.x versions have also been observed to work locally.
 * `pip` (bundled with Python)
 * Docker Desktop — only needed if you plan to run the container (see [Section 6](#6-run-with-docker))
 
@@ -26,7 +26,9 @@ venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-`pytest` and `httpx` (required to run the test suite) are **not** pinned in `requirements.txt` `[VERIFY]`. Install them explicitly if you plan to run tests:
+On macOS/Linux, activate with `source venv/bin/activate` instead (and use plain `curl` wherever this README shows `curl.exe`).
+
+`pytest` and `httpx` (required to run the test suite) are **not** pinned in `requirements.txt` (verified — see `docs/release-evidence.md`). Install them explicitly if you plan to run tests, exactly as CI does:
 
 ```powershell
 pip install pytest httpx
@@ -75,7 +77,7 @@ Notes:
 
 * The image is a multi-stage build (`python:3.11-slim`) that installs dependencies as a non-root `app` user and copies only `app/` and `frontend/` into the runtime stage.
 * `.env` is **not** copied into the image; the container runs with the defaults baked into `app/core/config.py` (`APP_ENV=development`, `PORT=8000`) unless you pass `-e` flags.
-* `[VERIFY]` The container's `CMD` hardcodes `--port 8000`; passing `-e PORT=...` will not change the port the server actually listens on inside the container — you'd still need to map the container's fixed port 8000 to a host port with `-p <host_port>:8000`.
+* The container's `CMD` hardcodes `--port 8000` (verified in the `Dockerfile`); passing `-e PORT=...` will not change the port the server actually listens on inside the container — map the container's fixed port 8000 to a host port with `-p <host_port>:8000` instead.
 
 ## 7. CI Workflow Summary
 
@@ -84,10 +86,10 @@ Defined in [.github/workflows/ci.yml](.github/workflows/ci.yml), the `CI` workfl
 1. Checks out the repository (`actions/checkout@v4`)
 2. Sets up Python 3.11 (`actions/setup-python@v5`)
 3. Upgrades `pip`
-4. Installs dependencies with `pip install -r requirements.txt`
+4. Installs dependencies with `pip install -r requirements.txt` followed by `pip install pytest httpx`
 5. Runs `pytest -v`
 
-`[VERIFY]` Since `pytest`/`httpx` aren't in `requirements.txt` (see [Section 3](#3-local-setup)), it's unconfirmed how the final `pytest -v` step succeeds in this workflow as written.
+Because `pytest`/`httpx` aren't pinned in `requirements.txt` (see [Section 3](#3-local-setup)), the workflow installs them explicitly in the dependency step — this was checked against the actual `ci.yml` (see the claim-vs-reality log in `docs/release-evidence.md`).
 
 ## 8. Project Structure
 
@@ -100,7 +102,7 @@ app/
   core/config.py     Settings/get_settings() — reads APP_ENV/PORT from environment/.env
   api/routes/health.py  Health check router
   schemas/health.py  HealthResponse model used by the health route
-  models/, storage/  Empty scaffold directories (.gitkeep only) `[VERIFY]` unused by current code
+  storage/           Empty scaffold directory (.gitkeep only), unused by current code
 frontend/
   index.html         Single-file HTML/CSS/JS Kanban board; calls the API via fetch()
 tests/
@@ -159,10 +161,10 @@ Health check:
 curl.exe http://127.0.0.1:8000/health
 ```
 
-Verified baseline result:
+Verified baseline result (re-verified 2026-08-15 on macOS with Python 3.11):
 
 ```json
-{"status":"ok","timestamp":"2026-08-10T14:31:43.930345+00:00"}
+{"status":"ok","timestamp":"2026-08-15T20:38:37.069028+00:00"}
 ```
 
 ### How to Run Tests
@@ -171,10 +173,10 @@ Verified baseline result:
 pytest
 ```
 
-Verified baseline result:
+Verified baseline result (re-verified 2026-08-15):
 
 ```text
-36 passed in 0.42s
+36 passed in 0.15s
 ```
 
 ### How to Run with Docker
