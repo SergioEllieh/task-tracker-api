@@ -97,6 +97,24 @@ def test_patch_partial_update_keeps_other_fields(client, created_task):
     assert data["id"] == created_task["id"]
 
 
+def test_patch_null_title_returns_422_and_does_not_corrupt_task(client, created_task):
+    response = client.patch(
+        f"/tasks/{created_task['id']}",
+        json={"title": None},
+    )
+
+    assert response.status_code == 422
+
+    # Verify the application still works after the rejected update
+    list_response = client.get("/tasks")
+    assert list_response.status_code == 200
+
+    tasks = list_response.json()
+    assert len(tasks) == 1
+    assert tasks[0]["id"] == created_task["id"]
+    assert tasks[0]["title"] == created_task["title"]
+
+
 def test_patch_not_found_returns_404(client):
     task_id = "00000000-0000-0000-0000-000000000000"
     response = client.patch(f"/tasks/{task_id}", json={"title": "nope"})
